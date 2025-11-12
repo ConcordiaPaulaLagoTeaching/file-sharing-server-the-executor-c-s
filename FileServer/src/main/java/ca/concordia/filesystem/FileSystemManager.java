@@ -14,7 +14,7 @@ public class FileSystemManager {
 
     private final int MAXFILES = 5;
     private final int MAXBLOCKS = 10;
-    private final static FileSystemManager instance;
+    private static FileSystemManager instance;
     private final RandomAccessFile disk;
     private final ReentrantLock globalLock = new ReentrantLock();
 
@@ -59,6 +59,41 @@ public class FileSystemManager {
 
     public void createFile(String fileName) throws Exception {
         // TODO
+        globalLock.lock();
+        try {
+            if (fileName == null || fileName.isEmpty()) {
+                throw new IllegalArgumentException("File name cannot be null or empty");
+            }
+            // Check if file already exists
+            for (FEntry entry : fEntry) {
+                if (entry.isUsed() && entry.getFilename().equals(fileName)) {
+                    throw new Exception("File already exists.");
+                }
+            }
+            // Find a free FEntry
+            boolean created = false;
+            for (FEntry entry : fEntry) {
+                if (!entry.isUsed()) {
+                    entry.setFilename(fileName);
+                    entry.setFilesize((short)0);
+                   // entry.setFirstBlock((short)-1);
+                    created = true;
+                    System.out.println("Created file: " + fileName);
+                    break;
+                }
+            }
+
+            if (!created) {
+                throw new Exception("Maximum file limit reached.");
+            }
+
+
+        } finally {
+            globalLock.unlock();
+        }
+
+
+
         throw new UnsupportedOperationException("Method not implemented yet.");
     }
 
@@ -85,6 +120,7 @@ public class FileSystemManager {
         throw new UnsupportedOperationException("Method not implemented yet.");
     }
 
+// Helper methods
 
 
 
