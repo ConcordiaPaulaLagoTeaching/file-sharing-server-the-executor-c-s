@@ -1,9 +1,14 @@
 package ca.concordia.filesystem;
 
+import java.io.FileNotFoundException;
+
 import ca.concordia.filesystem.datastructures.FEntry;
+import ca.concordia.filesystem.datastructures.FNode;
 
 import java.io.RandomAccessFile;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+
 
 public class FileSystemManager {
 
@@ -15,13 +20,37 @@ public class FileSystemManager {
 
     private static final int BLOCK_SIZE = 128; // Example block size
 
-    private FEntry[] inodeTable; // Array of inodes
+    private FEntry[] fEntry; // Array of fNode, changed names for easier tracking through project
     private boolean[] freeBlockList; // Bitmap for free blocks
+    private FNode[] fNode;//changed names for easier tracking through project
 
-    public FileSystemManager(String filename, int totalSize) {
+    public FileSystemManager(String filename, int totalSize) throws FileNotFoundException {//add throws io exeption?
         // Initialize the file system manager with a file
+        this.disk = new RandomAccessFile(filename, "rw");
+
+        fEntry = new FEntry[MAXFILES];
+        freeBlockList = new boolean[MAXBLOCKS];
+        fNode = new FNode[MAXBLOCKS];
+
+
         if(instance == null) {
             //TODO Initialize the file system
+            for(int i = 0; i < MAXFILES; i++) {
+                fEntry[i] = new FEntry();//initialise file entries
+            }
+            for(int i = 0; i < MAXBLOCKS; i++) {
+                fNode[i] = new FNode();
+                freeBlockList[i] = true; // All blocks are free initially
+            }  
+
+            //reserve blocks for metadata, add metsdata size calculation
+            int metadataBlocks = (int) Math.ceil((double)(MAXFILES * 15 + MAXBLOCKS * 4) / BLOCK_SIZE);
+            
+            for(int i = 0; i < metadataBlocks; i++) {
+                freeBlockList[i] = false; // Reserve blocks for metadata
+            }
+
+
         } else {
             throw new IllegalStateException("FileSystemManager is already initialized.");
         }
@@ -34,5 +63,29 @@ public class FileSystemManager {
     }
 
 
-    // TODO: Add readFile, writeFile and other required methods,
+    // required Read, Write, Delete, List methods to be implemented
+
+    public void readFile(String fileName) throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+    public void writeFile(String fileName, byte[] data) throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+    public void deleteFile(String fileName) throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+    public List<String> listFiles() throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+
+
+
 }
