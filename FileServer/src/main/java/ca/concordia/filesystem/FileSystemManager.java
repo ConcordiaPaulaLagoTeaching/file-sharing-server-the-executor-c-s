@@ -43,7 +43,7 @@ public class FileSystemManager {
             }  
 
             //reserve blocks for metadata, add metsdata size calculation
-            int metadataBlocks = (int) Math.ceil((double)(MAXFILES * FEntry.METADATA_SIZE + MAXBLOCKS * FNode.METADATA_SIZE + MAXBLOCKS) / BLOCK_SIZE);
+            int metadataBlocks = (int) Math.ceil((double)(MAXFILES * 15 + MAXBLOCKS * 4) / BLOCK_SIZE);
             
             for(int i = 0; i < metadataBlocks; i++) {
                 freeBlockList[i] = false; // Reserve blocks for metadata
