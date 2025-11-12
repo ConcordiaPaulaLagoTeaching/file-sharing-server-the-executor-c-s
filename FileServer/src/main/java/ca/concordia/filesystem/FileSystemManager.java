@@ -6,6 +6,7 @@ import ca.concordia.filesystem.datastructures.FEntry;
 import ca.concordia.filesystem.datastructures.FNode;
 
 import java.io.RandomAccessFile;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 
@@ -62,5 +63,29 @@ public class FileSystemManager {
     }
 
 
-    // TODO: Add readFile, writeFile and other required methods,
+    // required Read, Write, Delete, List methods to be implemented
+
+    public void readFile(String fileName) throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+    public void writeFile(String fileName, byte[] data) throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+    public void deleteFile(String fileName) throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+    public List<String> listFiles() throws Exception {
+        // TODO
+        throw new UnsupportedOperationException("Method not implemented yet.");
+    }
+
+
+
+
 }
