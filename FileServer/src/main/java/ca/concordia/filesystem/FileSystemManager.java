@@ -10,6 +10,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FileSystemManager {
 
@@ -19,6 +20,7 @@ public class FileSystemManager {
     private final RandomAccessFile disk;
     private final ReentrantLock globalLock = new ReentrantLock();
     private final int metadataBlocks;
+    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();//allow multiple reads but exclusive write
 
     private static final int BLOCK_SIZE = 128; // Example block size
 
@@ -59,8 +61,7 @@ public class FileSystemManager {
     }
 
     public void createFile(String fileName) throws Exception {
-        // TODO
-        globalLock.lock();
+        rwLock.writeLock().lock();
         try {
             if (fileName == null || fileName.isEmpty()) {
                 throw new IllegalArgumentException("File name cannot be null or empty");
@@ -90,18 +91,43 @@ public class FileSystemManager {
             }
 
         } finally {
-            globalLock.unlock();
+            rwLock.writeLock().unlock();
         }
     }
 
     // required Read, Write, Delete, List methods to be implemented
-    public void readFile(String fileName) throws Exception {
-        // TODO
-        throw new UnsupportedOperationException("Method not implemented yet.");
+    public byte[] readFile(String fileName) throws Exception {//needs to return so cant be void
+        rwLock.readLock().lock();
+        try {
+            FEntry target = null;
+            for (FEntry e : fEntry) {
+                if (e.isUsed() && e.getFilename().equals(fileName)) {//check file exists
+                    target = e;
+                    break;
+                }
+            }
+            if (target == null) {
+                throw new Exception("ERROR: file " + fileName + " does not exist");
+            }
+
+            byte[] data = new byte[target.getFilesize()];
+            int offset = 0;
+            int currentBlock = target.getFirstBlock();
+            while (currentBlock != -1 && offset < data.length) {//cycles through linked data blocks
+                disk.seek((currentBlock + metadataBlocks) * BLOCK_SIZE);//jump to correct memory location
+                int chunk = Math.min(BLOCK_SIZE, data.length - offset);
+                disk.readFully(data, offset, chunk);
+                offset += chunk;
+                currentBlock = fNode[currentBlock].getNext();
+            }
+            return data;
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     public void writeFile(String fileName, byte[] data) throws Exception {
-        globalLock.lock();
+        rwLock.writeLock().lock();
         try {
 
             FEntry target = null;
@@ -162,7 +188,7 @@ public class FileSystemManager {
                     prevBlock = i;
 
                     // Write data chunk to disk
-                    disk.seek((i+metadataBlocks) * BLOCK_SIZE);//location of first block start point
+                    disk.seek((i + metadataBlocks) * BLOCK_SIZE);//location of first block start point
                     int chunkSize = Math.min(BLOCK_SIZE, data.length - offset);//amount of data to write, a full block or remainder of file
                     disk.write(data, offset, chunkSize);//write chunk of data starting after offset
                     offset += chunkSize;//increase offset by last chunk size
@@ -173,14 +199,44 @@ public class FileSystemManager {
             target.setFilesize((short) data.length);//update filesize
             writeMetadataToDisk();//update metadata on disk
         } finally {
-            globalLock.unlock();
+            rwLock.writeLock().unlock();
         }
 
     }
 
     public void deleteFile(String fileName) throws Exception {
-        // TODO
-        throw new UnsupportedOperationException("Method not implemented yet.");
+        rwLock.writeLock().lock();
+        try {
+            FEntry target = null;
+            for (FEntry e : fEntry) {
+                if (e.isUsed() && e.getFilename().equals(fileName)) {//check file exists
+                    target = e;
+                    break;
+                }
+            }
+            if (target == null) {
+                throw new Exception("ERROR: file " + fileName + " does not exist");
+            }
+
+            int current = target.getFirstBlock();
+            byte[] zeros = new byte[BLOCK_SIZE];
+            while (current != -1) {
+                disk.seek((current + metadataBlocks) * BLOCK_SIZE);
+                disk.write(zeros);//delete data by overwriting with zeros
+                freeBlockList[current] = true;//mark block as free
+                fNode[current].setBlockIndex(-current);
+                int next = fNode[current].getNext();
+                fNode[current].setNext(-1);
+                current = next;
+            }
+
+            target.setFilename("");//remove metadata
+            target.setFilesize((short) 0);
+            target.setFirstBlock((short) -1);
+            writeMetadataToDisk();
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     public List<String> listFiles() throws Exception {
