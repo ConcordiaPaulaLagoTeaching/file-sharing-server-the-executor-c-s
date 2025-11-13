@@ -1,14 +1,15 @@
 package ca.concordia.filesystem;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import ca.concordia.filesystem.datastructures.FEntry;
 import ca.concordia.filesystem.datastructures.FNode;
 
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
-
 
 public class FileSystemManager {
 
@@ -32,24 +33,23 @@ public class FileSystemManager {
         freeBlockList = new boolean[MAXBLOCKS];
         fNode = new FNode[MAXBLOCKS];
 
-
-        if(instance == null) {
+        if (instance == null) {
             //TODO Initialize the file system
-            for(int i = 0; i < MAXFILES; i++) {
+            for (int i = 0; i < MAXFILES; i++) {
                 fEntry[i] = new FEntry();//initialise file entries
             }
-            for(int i = 0; i < MAXBLOCKS; i++) {
-                fNode[i] = new FNode();
+            for (int i = 0; i < MAXBLOCKS; i++) {
+                int initialIndex = i * (-1);
+                fNode[i] = new FNode(initialIndex);//initialise fNodes as empty (negative index)
                 freeBlockList[i] = true; // All blocks are free initially
-            }  
-
-            //reserve blocks for metadata, add metsdata size calculation
-            int metadataBlocks = (int) Math.ceil((double)(MAXFILES * 15 + MAXBLOCKS * 4) / BLOCK_SIZE);
-            
-            for(int i = 0; i < metadataBlocks; i++) {
-                freeBlockList[i] = false; // Reserve blocks for metadata
             }
 
+            //reserve blocks for metadata, add metsdata size calculation
+            int metadataBlocks = (int) Math.ceil((double) (MAXFILES * 15 + MAXBLOCKS * 4) / BLOCK_SIZE);
+
+            for (int i = 0; i < metadataBlocks; i++) {
+                freeBlockList[i] = false; // Reserve blocks for metadata
+            }
 
         } else {
             throw new IllegalStateException("FileSystemManager is already initialized.");
@@ -75,8 +75,9 @@ public class FileSystemManager {
             for (FEntry entry : fEntry) {
                 if (!entry.isUsed()) {
                     entry.setFilename(fileName);
-                    entry.setFilesize((short)0);
-                   // entry.setFirstBlock((short)-1);
+                    entry.setFilesize((short) 0);
+                    entry.setFirstBlock((short) -1);
+                    writeMetadataToDisk();
                     created = true;
                     System.out.println("Created file: " + fileName);
                     break;
@@ -87,27 +88,32 @@ public class FileSystemManager {
                 throw new Exception("Maximum file limit reached.");
             }
 
-
         } finally {
             globalLock.unlock();
         }
-
-
-
-        throw new UnsupportedOperationException("Method not implemented yet.");
     }
 
-
     // required Read, Write, Delete, List methods to be implemented
-
     public void readFile(String fileName) throws Exception {
         // TODO
         throw new UnsupportedOperationException("Method not implemented yet.");
     }
 
     public void writeFile(String fileName, byte[] data) throws Exception {
-        // TODO
-        throw new UnsupportedOperationException("Method not implemented yet.");
+        FEntry target = null;
+        for (FEntry e : fEntry) {//check file exists
+            if (e.isUsed() && e.getFilename().equals(fileName)) {
+                target = e;
+                break;
+            }
+        }
+        if (target == null) {
+            throw new Exception("ERROR: file " + fileName + " does not exist");
+        }
+
+        int blocksNeeded = (int) Math.ceil((double) data.length / BLOCK_SIZE);
+
+
     }
 
     public void deleteFile(String fileName) throws Exception {
@@ -116,12 +122,29 @@ public class FileSystemManager {
     }
 
     public List<String> listFiles() throws Exception {
-        // TODO
-        throw new UnsupportedOperationException("Method not implemented yet.");
+        List<String> names = new ArrayList<>();//array list to hold file names
+        for (FEntry e : fEntry) {
+            if (e.isUsed()) {
+                names.add(e.getFilename());//add filename to list
+            }
+        }
+        return names;
     }
 
 // Helper methods
+    private void writeMetadataToDisk() throws IOException {//use FNode??
+        disk.seek(0);
+        for (FEntry entry : fEntry) {
+            byte[] nameBytes = new byte[11];
+            if (entry.isUsed()) {
+                byte[] fnameBytes = entry.getFilename().getBytes();
+                System.arraycopy(fnameBytes, 0, nameBytes, 0, fnameBytes.length);//copy filename into byte array:(SourceArray, position, destArr, pos, length)
+            }
+            disk.write(nameBytes);
+            disk.writeShort(entry.getFilesize());
+            disk.writeShort(entry.getFirstBlock());
+        }
 
-
+    }
 
 }
