@@ -8,7 +8,13 @@ public class FEntry {
     private short filesize;
     private short firstBlock; // Pointers to data blocks
 
-    public FEntry(String filename, short filesize, short firstblock) throws IllegalArgumentException{
+    public FEntry() {//default constructor
+        this.filename = "";
+        this.filesize = 0;
+        this.firstBlock = -1;
+    }
+
+    public FEntry(String filename, short filesize, short firstblock) throws IllegalArgumentException {
         //Check filename is max 11 bytes long
         if (filename.length() > 11) {
             throw new IllegalArgumentException("Filename cannot be longer than 11 characters.");
@@ -43,5 +49,13 @@ public class FEntry {
 
     public short getFirstBlock() {
         return firstBlock;
+    }
+
+    public void setFirstBlock(short firstBlock) {
+        this.firstBlock = firstBlock;
+    }
+
+    public boolean isUsed() {
+        return filename != null && !filename.isEmpty();
     }
 }
