@@ -2,11 +2,11 @@ package ca.concordia.filesystem.datastructures;
 
 public class FNode {
 
-    private int blockIndex;
-    private int next;
+    private int blockIndex;// negativ efree, positive used
+    private int next;//-1 if none
 
-    public FNode(int blockIndex) {
-        this.blockIndex = blockIndex;
+    public FNode(int id) {
+        this.blockIndex = -Math.abs(id);
         this.next = -1;
     }
 

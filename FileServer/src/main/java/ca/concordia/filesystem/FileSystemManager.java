@@ -9,7 +9,6 @@ import ca.concordia.filesystem.datastructures.FNode;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FileSystemManager {
@@ -18,7 +17,6 @@ public class FileSystemManager {
     private final int MAXBLOCKS = 10;
     private static FileSystemManager instance;
     private final RandomAccessFile disk;
-    private final ReentrantLock globalLock = new ReentrantLock();
     private final int metadataBlocks;
     private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();//allow multiple reads but exclusive write
 
@@ -42,8 +40,7 @@ public class FileSystemManager {
                 fEntry[i] = new FEntry();//initialise file entries
             }
             for (int i = 0; i < MAXBLOCKS; i++) {
-                int initialIndex = i * (-1);
-                fNode[i] = new FNode(initialIndex);//initialise fNodes as empty (negative index)
+                fNode[i] = new FNode(i);//initialise fNodes as empty (negative index)
                 freeBlockList[i] = true; // All blocks are free initially
             }
 
@@ -165,7 +162,7 @@ public class FileSystemManager {
             while (oldBlock != -1) {//cycles through all linked data blocks
                 freeBlockList[oldBlock] = true;
                 int nextBlock = fNode[oldBlock].getNext();
-                fNode[oldBlock].setBlockIndex(oldBlock * -1); //mark as free
+                fNode[oldBlock].setBlockIndex(-Math.abs(oldBlock));
                 fNode[oldBlock].setNext(-1);//unlinks next block
                 oldBlock = nextBlock;
             }
@@ -178,6 +175,7 @@ public class FileSystemManager {
                 if (freeBlockList[i]) {//checks if block is free
                     freeBlockList[i] = false;
                     fNode[i].setBlockIndex(i);
+                    fNode[i].setNext(-1);
 
                     if (prevBlock != -1) {//if not first block
                         fNode[prevBlock].setNext(i);//link previous block to current
@@ -224,7 +222,7 @@ public class FileSystemManager {
                 disk.seek((current + metadataBlocks) * BLOCK_SIZE);
                 disk.write(zeros);//delete data by overwriting with zeros
                 freeBlockList[current] = true;//mark block as free
-                fNode[current].setBlockIndex(-current);
+                fNode[current].setBlockIndex(-Math.abs(current));//mark fNode as free
                 int next = fNode[current].getNext();
                 fNode[current].setNext(-1);
                 current = next;
@@ -261,6 +259,10 @@ public class FileSystemManager {
             disk.write(nameBytes);
             disk.writeShort(entry.getFilesize());
             disk.writeShort(entry.getFirstBlock());
+        }
+        for (FNode node : fNode) {
+            disk.writeInt(node.getBlockIndex());
+            disk.writeInt(node.getNext());
         }
 
     }
