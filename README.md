@@ -8,12 +8,4 @@ Runtime instructions:
 3. Start your local hosted server: java -cp src/main/java ca.concordia.Main
 4. Open a new terminal
 5. Link to your server (port should be = 12345): nc localhost 12345
-6. Try the commands avalible to you:
-   
-    CREATE test
-    WRITE test hello world
-    READ test
-    LIST
-    DELETE test
-    LIST
-    DISCONNECT
+6. Try the commands avalible to you: "CREATE test", "WRITE test hello world", "READ test", "LIST", "DELETE test", "LIST", "DISCONNECT".
