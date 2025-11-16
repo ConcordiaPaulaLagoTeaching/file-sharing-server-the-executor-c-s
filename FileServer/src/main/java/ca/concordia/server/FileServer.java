@@ -83,8 +83,7 @@ public class FileServer {
                                 }
                                 try {
                                     byte[] data = fsManager.readFile(filename);
-                                    writer.println("SUCCESS: read the following from file '" + filename + "'>.");
-                                    writer.println(new String(data, StandardCharsets.UTF_8));
+                                    writer.println("SUCCESS: read the following from file '" + filename + "'.");
                                 } catch (Exception e) {
                                     writer.println("ERROR: " + e.getMessage());
                                 }
