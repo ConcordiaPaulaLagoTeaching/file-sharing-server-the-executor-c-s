@@ -5,28 +5,16 @@ public class FNode {
     private int blockIndex;
     private int next;
 
-    public FNode(int blockIndex) {
-        this.blockIndex = blockIndex;
+    public FNode(int id) {
+        this.blockIndex = -Math.abs(id);
         this.next = -1;
     }
 
-    public int getBlockIndex() {
-        return blockIndex;
-    }
+    public int getBlockIndex() { return blockIndex; }
+    public void setBlockIndex(int blockIndex) { this.blockIndex = blockIndex; }
 
-    public void setBlockIndex(int blockIndex) {
-        this.blockIndex = blockIndex;
-    }
+    public int getNext() { return next; }
+    public void setNext(int next) { this.next = next; }
 
-    public int getNext() {
-        return next;
-    }
-
-    public void setNext(int next) {
-        this.next = next;
-    }
-
-    public boolean isUsed() {
-        return blockIndex >= 0;
-    }
+    public boolean isUsed() { return blockIndex >= 0; }
 }
