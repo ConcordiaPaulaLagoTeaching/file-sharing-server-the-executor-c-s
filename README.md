@@ -1,6 +1,8 @@
-In this project, you will be developing a file-sharing server. A file share server is a computer or server that enables multiple users on a network to access and share files and folders in a central location. It allows users to access files on various devices. You will create a server file system simulator to store all the files created by clients.
+-In this project, you will be developing a file-sharing server. A file share server is a computer or server that enables multiple users on a network to access and share files and folders in a central location. It allows users to access files on various devices. You will create a server file system simulator to store all the files created by clients.
+- This repository contains two projects: the client and the server. You only need to modify the server.
 
-This repository contains two projects: the client and the server. You only need to modify the server.
+Mathew Lunt
+Riad Rakan
 
 Runtime instructions:
 1. Cd to your fileServer folder: ./Desktop/DONE-file-sharing-server-the-executor-c-s-Testing-branch\ 2\ copy/FileServer/
